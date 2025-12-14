@@ -1,43 +1,39 @@
-#include <TFT_eSPI.h>
+#include <SPI.h>
+#include <Arduino.h>
+#define TOUCH_CS 22
 
-TFT_eSPI tft;
+SPISettings touchSPI(2000000, MSBFIRST, SPI_MODE0);
 
-void setup() {
-  tft.init();
-  tft.setRotation(1);   // landscape
-  tft.fillScreen(TFT_BLACK);
-
-  // -------- Smiley --------
-  int cx = 240;
-  int cy = 120;
-  int r  = 60;
-
-  // Face
-  tft.fillCircle(cx, cy, r, TFT_YELLOW);
-
-  // Eyes
-  tft.fillCircle(cx - 25, cy - 20, 6, TFT_BLACK);
-  tft.fillCircle(cx + 25, cy - 20, 6, TFT_BLACK);
-
-  // Smile (upward curve)
-  for (int i = -30; i <= 30; i += 2) {
-    int y = cy + 20 - (i * i) / 60;
-    tft.fillCircle(cx + i, y, 2, TFT_BLACK);
-  }
-
-  // -------- Text area --------
-  // Black background strip (explicit)
-  tft.fillRect(0, 220, 480, 40, TFT_BLACK);
-
-  // Text (GLCD font only)
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextSize(2);
-
-  tft.setCursor(200, 230);
-  tft.print("Hello Moti");
-
-  // Border for reference
-  tft.drawRect(20, 20, 440, 280, TFT_GREEN);
+uint16_t readXPT(uint8_t cmd)
+{
+  SPI.beginTransaction(touchSPI);
+  digitalWrite(TOUCH_CS, LOW);
+  SPI.transfer(cmd);
+  uint16_t v = SPI.transfer16(0x0000);
+  digitalWrite(TOUCH_CS, HIGH);
+  SPI.endTransaction();
+  return v >> 3;
 }
 
-void loop() {}
+void setup()
+{
+  Serial.begin(115200);
+  delay(1000);
+
+  Serial.println("\nXPT2046 RAW TEST");
+
+  pinMode(TOUCH_CS, OUTPUT);
+  digitalWrite(TOUCH_CS, HIGH);
+
+  SPI.begin(18, 19, 23);
+}
+
+void loop()
+{
+  uint16_t x = readXPT(0xD0); // X
+  uint16_t y = readXPT(0x90); // Y
+  uint16_t z = readXPT(0xB0); // Pressure
+
+  Serial.printf("X:%4d  Y:%4d  Z:%4d\n", x, y, z);
+  delay(300);
+}
