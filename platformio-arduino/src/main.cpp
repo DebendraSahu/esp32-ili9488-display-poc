@@ -1,39 +1,55 @@
-#include <SPI.h>
 #include <Arduino.h>
-#define TOUCH_CS 22
+#include <SPI.h>
+#include <XPT2046_Touchscreen.h>
 
-SPISettings touchSPI(2000000, MSBFIRST, SPI_MODE0);
+#define T_CS   22
+#define T_IRQ  21   // comment out if not connected
 
-uint16_t readXPT(uint8_t cmd)
-{
-  SPI.beginTransaction(touchSPI);
-  digitalWrite(TOUCH_CS, LOW);
-  SPI.transfer(cmd);
-  uint16_t v = SPI.transfer16(0x0000);
-  digitalWrite(TOUCH_CS, HIGH);
-  SPI.endTransaction();
-  return v >> 3;
-}
+#define T_CLK  18
+#define T_MISO 19
+#define T_MOSI 23
 
-void setup()
-{
+XPT2046_Touchscreen ts(T_CS, T_IRQ);
+
+void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  Serial.println("\nXPT2046 RAW TEST");
+  Serial.println("\n=== TOUCH LEVEL-2 DEBUG ===");
 
-  pinMode(TOUCH_CS, OUTPUT);
-  digitalWrite(TOUCH_CS, HIGH);
+  SPI.begin(T_CLK, T_MISO, T_MOSI);
 
-  SPI.begin(18, 19, 23);
+  pinMode(T_IRQ, INPUT_PULLUP);
+
+  if (!ts.begin()) {
+    Serial.println("Touch init FAILED");
+    while (1);
+  }
+
+  ts.setRotation(0);
+
+  Serial.println("Touch init OK");
+  Serial.println("Press screen...");
 }
 
-void loop()
-{
-  uint16_t x = readXPT(0xD0); // X
-  uint16_t y = readXPT(0x90); // Y
-  uint16_t z = readXPT(0xB0); // Pressure
+void loop() {
+  bool irq_state = digitalRead(T_IRQ);
 
-  Serial.printf("X:%4d  Y:%4d  Z:%4d\n", x, y, z);
-  delay(300);
+  if (ts.touched()) {
+    TS_Point p = ts.getPoint();
+
+    Serial.print("IRQ=");
+    Serial.print(irq_state);
+    Serial.print("  X=");
+    Serial.print(p.x);
+    Serial.print("  Y=");
+    Serial.print(p.y);
+    Serial.print("  Z=");
+    Serial.println(p.z);
+  } else {
+    Serial.print("no touch | IRQ=");
+    Serial.println(irq_state);
+  }
+
+  delay(200);
 }
