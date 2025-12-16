@@ -1,3 +1,9 @@
 {
-    "idf.portWin": "COM9"
+    "cSpell.words": [
+        "calib",
+        "MOSI",
+        "paulstoffregen",
+        "Pinout",
+        "VSPI"
+    ]
 }
