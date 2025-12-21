@@ -107,6 +107,33 @@ This is a **deliberate, tested configuration**, not guesswork.
 ├── User_Setup.h   (TFT_eSPI configuration)
 └── README.md
 ```
+---
+
+## Display Configuration (`User_Setup.h`)
+
+This project uses **TFT_eSPI** with a custom user setup replace in file `.pio/libdeps/esp32dev/TFT_eSPI/User_Setup.h` .
+
+```c
+// Enabled Driver
+#define ILI9488_DRIVER
+
+// SPI Pin Mapping
+#define TFT_MOSI  23
+#define TFT_SCLK  18
+#define TFT_CS    15
+#define TFT_DC    2
+#define TFT_RST   4
+
+// SPI Speed
+#define SPI_FREQUENCY 40000000
+
+// Fonts Loaded
+
+#define LOAD_GLCD
+#define LOAD_FONT2
+#define LOAD_FONT4   // Used for large UI elements (time, headers)
+#define LOAD_FONT6
+```
 
 ---
 
